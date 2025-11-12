@@ -11,16 +11,30 @@ def fetch_poster(movie_id):
         api_key = st.secrets["API_KEY"]
     except:
         api_key = os.environ.get('API_KEY')
+
+    if not api_key:
+        return "https://via.placeholder.com/500x750?text=API+Key+Missing"
+
     url = f'https://api.themoviedb.org/3/movie/{movie_id}?language=en-US'
     headers = {
     "accept": "application/json",
     "Authorization": f"Bearer {api_key}"}
 
-    data = requests.get(url, headers=headers)
-    data = data.json()
-    poster_path = data['poster_path']
-    full_path = "https://image.tmdb.org/t/p/w500/" + poster_path
-    return full_path
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()  # Raise an exception for bad status codes
+        data = response.json()
+
+        poster_path = data.get('poster_path')
+        if poster_path:
+            full_path = "https://image.tmdb.org/t/p/w500/" + poster_path
+            return full_path
+        else:
+            # Return a placeholder image if no poster is available
+            return "https://via.placeholder.com/500x750?text=No+Poster+Available"
+    except Exception as e:
+        # Return placeholder for any API errors
+        return "https://via.placeholder.com/500x750?text=Error+Loading+Poster"
 
 movies_list = pickle.load(open('movies.pkl','rb'))
 similar_movies = pickle.load(open('similarity.pkl','rb'))
