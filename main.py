@@ -49,6 +49,13 @@ similar_movies = pickle.load(open('similarity.pkl','rb'))
 
 # movies_list = movies_list['title'].values
 # st.write(movies_list)
+# Debug: Check if secrets are loaded
+try:
+    test_key = st.secrets["API_KEY"]
+    st.success(f"✅ API Key found in secrets! (starts with: {test_key[:10]}...)")
+except KeyError:
+    st.error("❌ API Key NOT found in secrets!")
+
 st.title('Movie Recommendation System')
 st.write('Select a movie:')
 selected_movie = st.selectbox('Movies', movies_list.title.values)
