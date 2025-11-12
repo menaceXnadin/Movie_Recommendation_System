@@ -4,8 +4,13 @@ from dotenv import load_dotenv
 import os
 import requests
 load_dotenv(override=True)
+
 def fetch_poster(movie_id):
-    api_key = os.environ.get('API_KEY')
+    # Try to get API key from Streamlit secrets first, then fall back to .env
+    try:
+        api_key = st.secrets["API_KEY"]
+    except:
+        api_key = os.environ.get('API_KEY')
     url = f'https://api.themoviedb.org/3/movie/{movie_id}?language=en-US'
     headers = {
     "accept": "application/json",
