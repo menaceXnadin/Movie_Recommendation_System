@@ -2,6 +2,10 @@
 
 A Streamlit app that recommends movies based on similarity.
 
+## 🌐 Live Demo
+
+Try the app live: [https://moviereccmenace.streamlit.app/](https://moviereccmenace.streamlit.app/)
+
 ## Local Development
 
 1. Install dependencies:
