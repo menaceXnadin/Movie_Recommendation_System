@@ -7,12 +7,20 @@ load_dotenv(override=True)
 
 def fetch_poster(movie_id):
     # Try to get API key from Streamlit secrets first, then fall back to .env
+    api_key = None
     try:
         api_key = st.secrets["API_KEY"]
-    except:
+        print(f"DEBUG: API key loaded from secrets: {api_key[:10]}...")  # Debug log
+    except KeyError:
+        print("DEBUG: API key not found in secrets, trying environment variable")
         api_key = os.environ.get('API_KEY')
+        if api_key:
+            print(f"DEBUG: API key loaded from environment: {api_key[:10]}...")
+        else:
+            print("DEBUG: No API key found in environment either")
 
     if not api_key:
+        st.error("❌ API Key Missing! Please set up your TMDB API key in Streamlit secrets.")
         return "https://via.placeholder.com/500x750?text=API+Key+Missing"
 
     url = f'https://api.themoviedb.org/3/movie/{movie_id}?language=en-US'
