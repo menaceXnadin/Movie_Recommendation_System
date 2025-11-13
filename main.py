@@ -53,11 +53,6 @@ print(f"DEBUG: similar_movies shape: {similar_movies.shape}")
 
 # movies_list = movies_list['title'].values
 # st.write(movies_list)
-# Debug: Check if secrets are loaded
-try:
-    test_key = st.secrets["API_KEY"]
-except KeyError:
-    st.error("❌ API Key NOT found in secrets!")
 
 st.title('Movie Recommendation System')
 st.write('Select a movie:')
