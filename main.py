@@ -11,7 +11,7 @@ def fetch_poster(movie_id):
     try:
         api_key = st.secrets["API_KEY"]
         print(f"DEBUG: API key loaded from secrets: {api_key[:10]}...")  # Debug log
-    except KeyError:
+    except Exception as e:
         print("DEBUG: API key not found in secrets, trying environment variable")
         api_key = os.environ.get('API_KEY')
         if api_key:
@@ -47,33 +47,45 @@ def fetch_poster(movie_id):
 movies_list = pickle.load(open('movies.pkl','rb'))
 similar_movies = pickle.load(open('similarity.pkl','rb'))
 
+# Reset index to ensure sequential indices starting from 0
+movies_list = movies_list.reset_index(drop=True)
+
 # Debug: Check data sizes
 print(f"DEBUG: movies_list size: {len(movies_list)}")
 print(f"DEBUG: similar_movies shape: {similar_movies.shape}")
 
-# movies_list = movies_list['title'].values
-# st.write(movies_list)
+# Filter movies to only include those within similarity matrix bounds
+max_index = len(similar_movies) - 1
+print(f"DEBUG: Max valid movie index: {max_index}")
+
+valid_movies = movies_list[movies_list.index <= max_index]
+print(valid_movies.index)
+print(f"DEBUG: Filtered to {len(valid_movies)} valid movies (out of {len(movies_list)})")
+
 
 st.title('Movie Recommendation System')
 st.write('Select a movie:')
-selected_movie = st.selectbox('Movies', movies_list.title.values)
+selected_movie = st.selectbox('Movies', valid_movies.title.values)
 
 def recommend(movie):
     similar_list_posters = []
-    movie_index = movies_list[movies_list['title']==movie].index[0]
+    movie_index = valid_movies[valid_movies['title']==movie].index[0]
 
-    # Check if movie_index is within bounds of similar_movies
+    # Double-check bounds (shouldn't be needed but safety first)
     if movie_index >= len(similar_movies):
         st.error(f"❌ Movie index {movie_index} is out of bounds for similarity matrix (size: {len(similar_movies)})")
         return [], []
 
     distances = similar_movies[movie_index]
+    print(f"DEBUG: Distances for movie '{movie}' (index {movie_index}): {distances}")
     similar_list = sorted(list(enumerate(distances)),reverse=True,key = lambda x:x[1])[1:6]
+    print(f"DEBUG: Similar movies for '{movie}' (index {movie_index}): {similar_list}")
+
 
     # Ensure we don't go out of bounds when accessing movies_list
     for i in similar_list:
-        if i[0] < len(movies_list):
-            similar_list_posters.append(fetch_poster(movies_list.iloc[i[0]].id))
+        if i[0] < len(valid_movies):
+            similar_list_posters.append(fetch_poster(valid_movies.iloc[i[0]].id))
         else:
             similar_list_posters.append("https://via.placeholder.com/500x750?text=Movie+Not+Found")
 
@@ -82,10 +94,9 @@ def recommend(movie):
 
 if st.button('Recommend'):
     recommendations_posters,recommendations = recommend(selected_movie)
-    # print(recommendations.index(0))
     col1, col2, col3,col4,col5 = st.columns(5)
     columns = [col1, col2, col3, col4, col5]
     for idx,i in enumerate(recommendations):
         with columns[idx]:
-            st.image(recommendations_posters[recommendations.index(i)])
-            st.write(movies_list.iloc[i[0]].title)
+            st.image(recommendations_posters[idx])
+            st.write(valid_movies.iloc[i[0]].title)
