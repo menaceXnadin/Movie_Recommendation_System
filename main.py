@@ -47,6 +47,10 @@ def fetch_poster(movie_id):
 movies_list = pickle.load(open('movies.pkl','rb'))
 similar_movies = pickle.load(open('similarity.pkl','rb'))
 
+# Debug: Check data sizes
+print(f"DEBUG: movies_list size: {len(movies_list)}")
+print(f"DEBUG: similar_movies shape: {similar_movies.shape}")
+
 # movies_list = movies_list['title'].values
 # st.write(movies_list)
 # Debug: Check if secrets are loaded
@@ -62,10 +66,22 @@ selected_movie = st.selectbox('Movies', movies_list.title.values)
 def recommend(movie):
     similar_list_posters = []
     movie_index = movies_list[movies_list['title']==movie].index[0]
+
+    # Check if movie_index is within bounds of similar_movies
+    if movie_index >= len(similar_movies):
+        st.error(f"❌ Movie index {movie_index} is out of bounds for similarity matrix (size: {len(similar_movies)})")
+        return [], []
+
     distances = similar_movies[movie_index]
     similar_list = sorted(list(enumerate(distances)),reverse=True,key = lambda x:x[1])[1:6]
+
+    # Ensure we don't go out of bounds when accessing movies_list
     for i in similar_list:
-        similar_list_posters.append(fetch_poster(movies_list.iloc[i[0]].id))
+        if i[0] < len(movies_list):
+            similar_list_posters.append(fetch_poster(movies_list.iloc[i[0]].id))
+        else:
+            similar_list_posters.append("https://via.placeholder.com/500x750?text=Movie+Not+Found")
+
     return similar_list_posters,similar_list
 
 
